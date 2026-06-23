@@ -2,8 +2,12 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend
+  namespace: default
 spec:
   replicas: 1
+  # Forces K3s to kill the old frontend pod before starting the new one
+  strategy:
+    type: Recreate 
   selector:
     matchLabels:
       app: frontend
@@ -12,23 +16,16 @@ spec:
       labels:
         app: frontend
     spec:
-      nodeSelector:
-        workload-type: apps
       containers:
       - name: frontend
-        image: mridul19980-ai/frontend:latest
-        imagePullPolicy: Always
+        image: your-dockerhub-username/frontend:latest
         ports:
         - containerPort: 80
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend-service
-spec:
-  selector:
-    app: frontend
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
+        # Strict resource boundaries for a small EC2 instance
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
