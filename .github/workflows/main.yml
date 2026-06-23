@@ -60,10 +60,8 @@ jobs:
             
             echo "Applying Kubernetes files..."
             kubectl apply -f secrets.yaml
-            kubectl apply -f database.yaml
             kubectl apply -f mysql.yaml
             kubectl apply -f backend.yaml
-            kubectl apply -f backend-alias.yaml
             kubectl apply -f frontend.yaml
             kubectl apply -f ingress.yaml
             
