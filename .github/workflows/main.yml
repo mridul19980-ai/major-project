@@ -10,19 +10,6 @@ jobs:
     steps:
     - name: Checkout Code Base
       uses: actions/checkout@v3
-
-    # 1. Copy K3S configuration files to the EC2 master server
-    - name: Copy Kubernetes manifests to EC2
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        port: 22
-        source: "K3S/*"
-        target: "~/k3s_deploy"
-        strip_components: 1    
-
     # 2. Authenticate with DockerHub
     - name: Authenticate with DockerHub
       uses: docker/login-action@v2
