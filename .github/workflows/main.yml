@@ -1,49 +1,51 @@
-name: CI-CD to K3s
+name: Production 3-Tier Web App CI/CD
 
 on:
   push:
-    branches:
-      - main
-
-env:
-  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-  FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/m-p-f
-  BACKEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/m-p-b
+    branches: [ main ]
 
 jobs:
-  deploy:
-    - name: Deploy to K3s
-      runs-on: ubuntu-latest
-    # IMPORTANT: If you do not have a separate job named "build-and-push" 
-    # in this exact file, you must delete the line below, otherwise the action will fail.
-      needs: build-and-push 
-
+  build-and-deploy:
+    runs-on: ubuntu-latest
     steps:
-      # 1. Pull the code into the GitHub Actions runner environment
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout Code Base
+      uses: actions/checkout@v3
+    
+    - name: Authenticate with DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # 2. Copy the contents of the K3S folder to the EC2 instance
-      - name: Copy Kubernetes manifests to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          source: "K3S/*"
-          target: "~/k3s_deploy"
-          strip_components: 1
+    # 2. Copy the contents of the K3S folder to the EC2 instance
+    - name: Copy Kubernetes manifests to EC2
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: 22
+        source: "K3S/*"
+        target: "~/k3s_deploy"
+        strip_components: 1    
+    - name: Build & Push API Backend Image
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/backend:latest ./backend
+        docker push ${{ secrets.DOCKER_USERNAME }}/backend:latest
 
-      # 3. SSH in, navigate to the new folder, and apply the files
-      - name: Deploy on K3s master using SSH
-        uses: appleboy/ssh-action@v1.2.2
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
+    - name: Build & Push Static UI Frontend Image
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/frontend:latest ./frontend
+        docker push ${{ secrets.DOCKER_USERNAME }}/frontend:latest
+        
+    - name: Deploy on K3s master using SSH
+      uses: appleboy/ssh-action@v1.2.2
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USERNAME }}
+        key: ${{ secrets.EC2_SSH_KEY }}
+        port: 22
+        script: |
             set -e
             
             # Navigate to the folder where SCP just dropped the files
