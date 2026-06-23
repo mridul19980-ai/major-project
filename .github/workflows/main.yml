@@ -10,61 +10,64 @@ env:
   FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/m-p-f
   BACKEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/m-p-b
 
-deploy:
-  name: Deploy to K3s
-  runs-on: ubuntu-latest
-  needs: build-and-push
+jobs:
+  deploy:
+    - name: Deploy to K3s
+      runs-on: ubuntu-latest
+    # IMPORTANT: If you do not have a separate job named "build-and-push" 
+    # in this exact file, you must delete the line below, otherwise the action will fail.
+      needs: build-and-push 
 
-  steps:
-    # 1. Pull the code into the GitHub Actions runner environment
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    steps:
+      # 1. Pull the code into the GitHub Actions runner environment
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # 2. Copy the contents of the K3S folder to the EC2 instance
-    - name: Copy Kubernetes manifests to EC2
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        port: 22
-        source: "K3S/*" 
-        target: "~/k3s_deploy"
-        strip_components: 1
+      # 2. Copy the contents of the K3S folder to the EC2 instance
+      - name: Copy Kubernetes manifests to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          source: "K3S/*"
+          target: "~/k3s_deploy"
+          strip_components: 1
 
-    # 3. SSH in, navigate to the new folder, and apply the files
-    - name: Deploy on K3s master using SSH
-      uses: appleboy/ssh-action@v1.2.2
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USERNAME }}
-        key: ${{ secrets.EC2_SSH_KEY }}
-        port: 22
-        script: |
-          set -e
-          
-          # Navigate to the folder where SCP just dropped the files
-          cd ~/k3s_deploy
-          
-          echo "Applying Kubernetes files..."
-          kubectl apply -f secrets.yaml
-          kubectl apply -f database.yaml
-          kubectl apply -f mysql.yaml
-          kubectl apply -f backend.yaml
-          kubectl apply -f backend-alias.yaml
-          kubectl apply -f frontend.yaml
-          kubectl apply -f ingress.yaml
-          
-          echo "Updating deployment images..."
-          kubectl set image deployment/frontend frontend=${{ secrets.DOCKERHUB_USERNAME }}/m-p-f:${{ github.sha }}
-          kubectl set image deployment/backend backend=${{ secrets.DOCKERHUB_USERNAME }}/m-p-b:${{ github.sha }}
-          
-          echo "Waiting for rollout..."
-          kubectl rollout status deployment/frontend --timeout=180s
-          kubectl rollout status deployment/backend --timeout=180s
-          
-          echo "Current status:"
-          kubectl get pods -o wide
-          kubectl get svc
-          kubectl get ingress
-          kubectl get endpoints
+      # 3. SSH in, navigate to the new folder, and apply the files
+      - name: Deploy on K3s master using SSH
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            set -e
+            
+            # Navigate to the folder where SCP just dropped the files
+            cd ~/k3s_deploy
+            
+            echo "Applying Kubernetes files..."
+            kubectl apply -f secrets.yaml
+            kubectl apply -f database.yaml
+            kubectl apply -f mysql.yaml
+            kubectl apply -f backend.yaml
+            kubectl apply -f backend-alias.yaml
+            kubectl apply -f frontend.yaml
+            kubectl apply -f ingress.yaml
+            
+            echo "Updating deployment images..."
+            kubectl set image deployment/frontend frontend=${{ secrets.DOCKERHUB_USERNAME }}/m-p-f:${{ github.sha }}
+            kubectl set image deployment/backend backend=${{ secrets.DOCKERHUB_USERNAME }}/m-p-b:${{ github.sha }}
+            
+            echo "Waiting for rollout..."
+            kubectl rollout status deployment/frontend --timeout=180s
+            kubectl rollout status deployment/backend --timeout=180s
+            
+            echo "Current status:"
+            kubectl get pods -o wide
+            kubectl get svc
+            kubectl get ingress
+            kubectl get endpoints
