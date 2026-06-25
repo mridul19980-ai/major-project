@@ -41,6 +41,8 @@ jobs:
         port: 22
         script: |
             set -e
+            # Explicitly set the Kubeconfig path for this SSH session
+            export KUBECONFIG=~/.kube/config
             
             # Move to the directory where SCP just dropped the files
             cd ~/k3s_deploy
