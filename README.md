@@ -138,11 +138,18 @@ To successfully fork and run this project, configure the following **GitHub Repo
 *Developed by Mridul Choudhary*
 
 <img width="1920" height="1080" alt="Screenshot 2026-06-25 122626" src="https://github.com/user-attachments/assets/bba3e63a-861a-4ed5-bd03-d964ce4dd192" />
+
 <img width="1920" height="1080" alt="Screenshot 2026-06-25 122601" src="https://github.com/user-attachments/assets/6669f82c-409c-46dd-89ad-90745cf21f5b" />
+
 <img width="1920" height="1080" alt="Screenshot 2026-06-25 122514" src="https://github.com/user-attachments/assets/43af766c-8baf-4b81-af63-a798beb7b0ce" />
+
 <img width="1920" height="1080" alt="Screenshot 2026-06-25 122455" src="https://github.com/user-attachments/assets/98f8bf3a-04b5-4d84-ad4b-ff5762e7586c" />
+
 <img width="1920" height="1080" alt="Screenshot 2026-06-25 122438" src="https://github.com/user-attachments/assets/456ea4ba-0f5b-44e0-b87c-f33413366dd7" />
+
 <img width="1920" height="1080" alt="Screenshot 2026-06-25 121735" src="https://github.com/user-attachments/assets/4f646db8-7e7a-45e1-9140-d3e6cd26099b" />
+
 <img width="1920" height="1080" alt="Screenshot 2026-06-25 120951" src="https://github.com/user-attachments/assets/fb5aab02-68d9-4a2d-9188-f39f276dd417" />
+
 <img width="1920" height="1080" alt="Screenshot 2026-06-25 120933" src="https://github.com/user-attachments/assets/e5e64fb2-b249-4189-ad74-37b11f448f1e" />
 
