@@ -24,8 +24,8 @@ spec:
         # Strict resource boundaries for a small EC2 instance
         resources:
           requests:
-            memory: "64Mi"
-            cpu: "50m"
-          limits:
-            memory: "128Mi"
+            memory: "256Mi"
             cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"
