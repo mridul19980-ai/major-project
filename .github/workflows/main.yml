@@ -59,8 +59,8 @@ jobs:
             kubectl set image deployment/backend backend=${{ secrets.DOCKERHUB_USERNAME }}/backend:${{ github.sha }}
             
             echo "Waiting for rollout..."
-            kubectl rollout status deployment/frontend --timeout=180s
-            kubectl rollout status deployment/backend --timeout=180s
+            kubectl rollout status deployment/frontend 
+            kubectl rollout status deployment/backend 
             
             echo "Current status:"
             kubectl get pods -o wide
