@@ -1,61 +1,138 @@
-# Production Ready Three-Tier Web Application Deployment using DevOps Practices
+# End-to-End GitOps-Driven Kubernetes Pipeline
 
-An end-to-end cloud infrastructure implementation demonstrating the automation, orchestration, containerization, and monitoring of an agile 3-tier web architecture operating strictly within AWS Free Tier limitations.
+A robust, fully automated CI/CD pipeline and infrastructure-as-code project deploying a multi-tier microservices application. This repository provisions cloud infrastructure on AWS and utilizes GitHub Actions to continuously build, push, and deploy a containerized application (Frontend, Backend, and MySQL Database) to a lightweight K3s Kubernetes cluster.
 
-## 🏗 Architecture Topology
-[Presentation Layer: Nginx Frontend Pod] 
-           │
-           ▼ (Routed by Traefik Ingress Controller via /api Path)
-[Application Layer: Node.js Backend API Pod]
-           │
-           ▼ (Targeted Cluster DNS Name: mysql)
-[Database Layer: MySQL 8.4 Container Instance + Local Storage PV]
+## 🚀 Tech Stack & Tools
 
-> Note: All workloads are explicitly scheduled to the Worker Node via Kubernetes Node Selectors to guarantee zero control plane degradation on the Master Node.
+* **Cloud Provider:** AWS (EC2)
+* **Containerization:** Docker & Docker Compose
+* **Orchestration:** Kubernetes (K3s)
+* **CI/CD:** GitHub Actions
+* **Infrastructure as Code (IaC):** Terraform (`tf`)
+* **Web Server / Reverse Proxy:** Nginx
+* **Database:** MySQL
+* **Version Control:** Git
 
----
+## 📂 Repository Structure
 
-## 🛠 Tech Stack & Tools Integrated
-* **Cloud Infrastructure:** AWS EC2 (2x `t2.micro`), AWS Custom VPC
-* **Container Orchestration:** K3s Lightweight Kubernetes Distribution
-* **Containerization Engine:** Docker & Engine Mechanics
-* **CI/CD Orchestrator:** GitHub Actions Automation
-* **Base Web Engine Stack:** Nginx UI, Node.js Engine, MySQL Database Engine
-* **System Task Engineers:** Linux Bash Script Suite (Cron Execution)
+```text
+.
+├── .github/workflows/
+│   └── main.yml           # GitHub Actions CI/CD pipeline definition
+├── K3s/                   # Kubernetes manifest files
+│   ├── backend.yaml       # Backend Deployment & Service
+│   ├── frontend.yaml      # Frontend Deployment (Nginx) & Service
+│   ├── ingress.yaml       # Traefik Ingress routing rules
+│   ├── mysql.yaml         # Stateful database Deployment & Service
+│   └── secrets.yaml       # Encrypted credentials for the cluster
+├── backend/               # Backend API source code and Dockerfile
+├── database/              # Database initialization scripts and schemas
+├── frontend/              # Frontend application source code and Dockerfile
+├── infra(tf)/             # Terraform scripts for AWS EC2 provisioning
+├── scripts/               # Automation and helper shell scripts
+├── .env.example           # Template for local environment variables
+├── .gitignore             # Ignored files and directories
+├── docker-compose.yml     # Local testing and development orchestration
+└── README.md              # Project documentation
 
----
+```
 
-## 🚀 Step-by-Step Cluster Deployment Sequence
+## ⚙️ CI/CD Pipeline Workflow
 
-### 1. Initialize Secrets and Data Contexts
-Execute inside the K8s manifest control space:
-2. Launch the Storage & Stateful Data Matrix
-Bash
-sudo kubectl apply -f k8s/mysql.yaml
-3. Deploy App Components & Routing Pipelines
-Bash
-sudo kubectl apply -f k8s/backend.yaml
-sudo kubectl apply -f k8s/frontend.yaml
-sudo kubectl apply -f k8s/ingress.yaml
-📊 Automation & Shell Crons Execution
-System monitoring and scheduled local table extractions are governed via regular background jobs:
+The automated deployment pipeline is triggered on every push to the `main` branch. The GitHub Actions workflow executes the following steps:
 
-Plaintext
-0 2 * * * /home/ubuntu/scripts/backup.sh
-0 3 * * * /home/ubuntu/scripts/cleanup.sh
-*/10 * * * * /home/ubuntu/scripts/monitor.sh
+1. **Code Checkout:** Pulls the latest source code.
+2. **DockerHub Authentication:** Logs into DockerHub using repository secrets.
+3. **Build & Push Images:** Builds the `frontend` and `backend` Docker images and pushes them to the DockerHub registry (e.g., `mridul19980/frontend:latest`).
+4. **SSH into K3s Master:** Connects securely to the AWS EC2 instance hosting the K3s control plane.
+5. **Deploy Manifests:** Applies the updated configuration files in the `K3s/` directory using `kubectl apply -f`.
+6. **Rollout Verification:** Monitors the deployment status and waits for the new pods to reach the `Running` state before marking the pipeline as successful.
 
----
+## 🛠️ Infrastructure Setup (Terraform)
 
-## **Part 4: Uploading to GitHub**
+The physical infrastructure is managed via Terraform. To provision the environment:
 
-Once all your local files are populated, execute these terminal commands within your project root folder to link and push your workspace directly to your GitHub repository:
+1. Navigate to the Terraform directory:
+```bash
+
+```
+
+
+
+cd infra$tf$
+
+```
+2. Initialize the working directory:
+   ```bash
+terraform init
+
+```
+
+3. Review the infrastructure plan:
+```bash
+
+```
+
+
+
+terraform plan
+
+```
+4. Provision the AWS EC2 resources:
+   ```bash
+terraform apply --auto-approve
+
+```
+
+## 🚢 Kubernetes Deployment (K3s)
+
+The application utilizes K3s for lightweight container orchestration.
+
+### Key Configurations:
+
+* **Resource Limits:** Implemented strict CPU and Memory boundaries (e.g., `512Mi` limits for frontend pods) to prevent node resource exhaustion.
+* **Networking:** Internal communication is handled via Kubernetes `ClusterIP` Services mapping to designated pods (e.g., `backend` service resolving on port `5000`).
+* **Ingress:** Traefik routes external traffic from the node's public IP directly to the `frontend-service` on port `80`.
+
+### Manual Deployment
+
+If bypassing the CI/CD pipeline for testing, apply the cluster manifests manually:
 
 ```bash
-git init
-git add .
-git commit -m "feat: complete architectural 3-tier deployment with explicit worker node provisioning"
-git branch -M main
-git remote add origin https://github.com/mridul19980-ai/major-project.git
-git push -u origin main --force
-'''
+kubectl apply -f K3s/secrets.yaml
+kubectl apply -f K3s/mysql.yaml
+kubectl apply -f K3s/backend.yaml
+kubectl apply -f K3s/frontend.yaml
+kubectl apply -f K3s/ingress.yaml
+
+```
+
+## 💻 Local Development
+
+To run the entire application stack locally without Kubernetes, utilize Docker Compose:
+
+```bash
+# Start all services in detached mode
+docker-compose up -d
+
+# View application logs
+docker-compose logs -f
+
+# Tear down the local environment
+docker-compose down
+
+```
+
+## 🔒 Prerequisites & Secrets
+
+To successfully fork and run this project, configure the following **GitHub Repository Secrets**:
+
+* `DOCKERHUB_USERNAME`
+* `DOCKERHUB_TOKEN`
+* `EC2_SSH_KEY` (Private key for SSH access to the K3s node)
+* `EC2_HOST` (Public IP of the AWS instance)
+* `EC2_USER` (Default is usually `ubuntu` or `ec2-user`)
+
+---
+
+*Developed by Mridul Choudhary*
